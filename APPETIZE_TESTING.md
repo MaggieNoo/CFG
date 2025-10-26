@@ -6,29 +6,57 @@ This guide shows you how to test the iOS app in your browser using Appetize.io -
 
 ## Step 1: Get the Simulator Build
 
+### **RECOMMENDED METHOD:**
+
 1. Go to your GitHub repository: https://github.com/MaggieNoo/CFG
 2. Click on **"Actions"** tab
 3. Click on the latest workflow run
 4. Scroll down to **"Artifacts"** section
-5. Download: **`appetize-simulator-build`** (contains `camalig_gym_simulator.zip`)
+5. Download: **`runner-app-folder`** ⭐ **USE THIS ONE**
 
-## Step 2: Upload to Appetize.io
+### Alternative Method:
+- Download `appetize-simulator-build` (contains pre-compressed versions)
+
+## Step 2: Prepare the App for Upload
+
+### Using runner-app-folder (RECOMMENDED):
+
+1. **Extract** the downloaded `runner-app-folder.zip` from GitHub
+2. You'll get a folder structure with **Runner.app** inside
+3. **On Windows:**
+   - Install 7-Zip if you don't have it
+   - Right-click the `Runner.app` folder
+   - Select "7-Zip" > "Add to archive"
+   - Format: ZIP
+   - Save as `Runner.zip`
+
+4. **On Mac:**
+   - Right-click the `Runner.app` folder
+   - Select "Compress"
+   - This creates `Runner.app.zip`
+
+### Using pre-compressed files (Alternative):
+
+If you downloaded `appetize-simulator-build`:
+- Extract it and try uploading `camalig_gym_simulator.tar.gz`
+
+## Step 3: Upload to Appetize.io
 
 1. Visit: https://appetize.io
 2. Click **"Upload App"** or **"Try Demo"**
-3. **Try uploading `camalig_gym_simulator.tar.gz` first** (recommended)
-   - If that doesn't work, try `camalig_gym_simulator.zip`
+3. Upload the ZIP file you created (e.g., `Runner.zip`)
 4. Choose platform: **iOS**
 5. Wait for upload to complete (~1-2 minutes)
 
 ### Troubleshooting Upload Issues:
 
-If you see "No app folder found":
-- ✅ Use the `.tar.gz` file instead of `.zip`
-- ✅ Make sure you extracted the artifact ZIP first, then upload the simulator file inside
-- ✅ The file should contain `Runner.app` at the root level
+**If you see "No app folder found":**
+- ✅ Make sure you're zipping the `Runner.app` **folder itself**, not its contents
+- ✅ The ZIP should contain: `Runner.app/` at the root
+- ✅ Try using the `runner-app-folder` artifact and compress it yourself
+- ✅ Use 7-Zip or native compression (don't use WinRAR with special options)
 
-## Step 3: Test Your App
+## Step 4: Test Your App
 
 Once uploaded, you'll get:
 - ✅ Interactive iOS simulator in your browser

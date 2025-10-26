@@ -54,6 +54,14 @@ jobs:
         run: flutter build ios --release --no-codesign
         continue-on-error: true # May fail without certificates
       
+      - name: Verify Simulator Build
+        run: |
+          echo "Checking simulator build structure:"
+          ls -la build/ios/iphonesimulator/
+          echo ""
+          echo "Contents of Runner.app:"
+          ls -la build/ios/iphonesimulator/Runner.app/ | head -20
+      
       - name: Create IPA Archive (Unsigned - for Device)
         run: |
           mkdir -p Payload
@@ -62,19 +70,25 @@ jobs:
           rm -rf Payload
         continue-on-error: true
       
-      - name: Create Simulator ZIP for Appetize.io
+      - name: Create Simulator ZIP for Appetize.io (Method 1)
         run: |
           cd build/ios/iphonesimulator
-          zip -ry ../../../camalig_gym_simulator.zip Runner.app
+          ditto -c -k --sequesterRsrc --keepParent Runner.app ../../../camalig_gym_simulator.zip
           cd ../../..
-          echo "Verifying zip contents:"
-          unzip -l camalig_gym_simulator.zip | head -20
       
-      - name: Create Simulator TAR.GZ (Alternative format for Appetize.io)
+      - name: Create Simulator TAR.GZ for Appetize.io (Method 2)
         run: |
           cd build/ios/iphonesimulator
           tar -czf ../../../camalig_gym_simulator.tar.gz Runner.app
           cd ../../..
+      
+      - name: Verify Archives
+        run: |
+          echo "=== ZIP Contents ==="
+          unzip -l camalig_gym_simulator.zip | head -30
+          echo ""
+          echo "=== TAR.GZ Contents ==="
+          tar -tzf camalig_gym_simulator.tar.gz | head -30
       
       - name: Upload Simulator Build for Appetize.io
         uses: actions/upload-artifact@v4
@@ -83,6 +97,13 @@ jobs:
           path: |
             camalig_gym_simulator.zip
             camalig_gym_simulator.tar.gz
+          retention-days: 30
+      
+      - name: Upload Raw Runner.app (Direct Upload to Appetize)
+        uses: actions/upload-artifact@v4
+        with:
+          name: runner-app-folder
+          path: build/ios/iphonesimulator/Runner.app/
           retention-days: 30
       
       - name: Upload Unsigned IPA (Device Build)
@@ -108,16 +129,22 @@ jobs:
           echo "✅ iOS build completed successfully!"
           echo ""
           echo "📦 Artifacts created:"
-          echo "  🍎 camalig_gym_simulator.zip - For Appetize.io (ZIP format)"
-          echo "  🍎 camalig_gym_simulator.tar.gz - For Appetize.io (TAR.GZ format)"
+          echo "  🍎 runner-app-folder - Raw Runner.app (RECOMMENDED for Appetize.io)"
+          echo "  🍎 camalig_gym_simulator.zip - Compressed format"
+          echo "  🍎 camalig_gym_simulator.tar.gz - Alternative compressed format"
           echo "  📱 camalig_gym_unsigned.ipa - Unsigned device build"
           echo ""
           echo "🧪 Testing on Appetize.io:"
-          echo "  1. Go to https://appetize.io"
-          echo "  2. Click 'Upload App'"
-          echo "  3. Try uploading camalig_gym_simulator.tar.gz first"
-          echo "  4. If that fails, try camalig_gym_simulator.zip"
-          echo "  5. Test your app in the browser!"
+          echo "  OPTION 1 (RECOMMENDED):"
+          echo "    1. Download 'runner-app-folder' artifact"
+          echo "    2. Extract the ZIP from GitHub"
+          echo "    3. You'll get a Runner.app folder"
+          echo "    4. ZIP that folder yourself (right-click > Compress)"
+          echo "    5. Upload to Appetize.io"
+          echo ""
+          echo "  OPTION 2:"
+          echo "    1. Try uploading camalig_gym_simulator.zip"
+          echo "    2. Or try camalig_gym_simulator.tar.gz"
           echo ""
           echo "⚠️ Note: Unsigned IPA cannot be installed on physical devices."
           echo "   For App Store: Need Apple Developer account + certificates"

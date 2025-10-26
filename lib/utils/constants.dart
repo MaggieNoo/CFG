@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'environment_config.dart';
 
 class AppConstants {
   // API Configuration
-  // Your virtual host: camaligfitnessgym.local points to d:\Xampp\htdocs\camalig\web\
-  // So mobile folder is at: http://192.168.8.46/mobile/
-  static const String baseUrl = 'http://192.168.8.46/mobile/';
+  // Dynamic baseUrl based on environment
+  // Change environment in environment_config.dart
+  static String get baseUrl => EnvironmentConfig.baseUrl;
   static const String apiToken = '_jE@20RIC!25\$\$';
+
+  // For cloud testing platforms (Appetize.io, BrowserStack, etc.)
+  // Set Environment.demo in environment_config.dart to use mock data
+  static bool get isDemoMode => EnvironmentConfig.isDemoMode;
 
   // API Endpoints
   static const String loginEndpoint = 'app.login.php';

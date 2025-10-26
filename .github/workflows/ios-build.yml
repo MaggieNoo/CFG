@@ -54,7 +54,7 @@ jobs:
         run: flutter build ios --release --no-codesign
         continue-on-error: true # May fail without certificates
       
-      - name: Create IPA Archive
+      - name: Create IPA Archive (Unsigned - for Device)
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
@@ -62,17 +62,20 @@ jobs:
           rm -rf Payload
         continue-on-error: true
       
-      - name: Archive Build Artifacts
+      - name: Create Simulator ZIP for Appetize.io
+        run: |
+          cd build/ios/iphonesimulator
+          zip -r ../../../camalig_gym_simulator.zip Runner.app
+          cd ../../..
+      
+      - name: Upload Simulator Build for Appetize.io
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build-artifacts
-          path: |
-            build/ios/iphoneos/Runner.app
-            build/ios/iphonesimulator/Runner.app
-            camalig_gym_unsigned.ipa
+          name: appetize-simulator-build
+          path: camalig_gym_simulator.zip
           retention-days: 30
       
-      - name: Upload IPA separately
+      - name: Upload Unsigned IPA (Device Build)
         uses: actions/upload-artifact@v4
         if: success()
         with:
@@ -80,12 +83,28 @@ jobs:
           path: camalig_gym_unsigned.ipa
           retention-days: 30
       
+      - name: Archive All Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-all-builds
+          path: |
+            camalig_gym_simulator.zip
+            camalig_gym_unsigned.ipa
+          retention-days: 30
+      
       - name: Build Summary
         run: |
           echo "✅ iOS build completed successfully!"
-          echo "📦 Artifacts uploaded"
-          echo "📱 IPA file: camalig_gym_unsigned.ipa"
-          echo "⚠️ Note: This is an unsigned IPA. For App Store distribution, you need:"
-          echo "   - Apple Developer account"
-          echo "   - Valid provisioning profile"
-          echo "   - Code signing certificate"
+          echo ""
+          echo "📦 Artifacts created:"
+          echo "  🍎 camalig_gym_simulator.zip - For Appetize.io testing"
+          echo "  📱 camalig_gym_unsigned.ipa - Unsigned device build"
+          echo ""
+          echo "🧪 Testing on Appetize.io:"
+          echo "  1. Go to https://appetize.io"
+          echo "  2. Click 'Upload App'"
+          echo "  3. Upload camalig_gym_simulator.zip"
+          echo "  4. Test your app in the browser!"
+          echo ""
+          echo "⚠️ Note: Unsigned IPA cannot be installed on physical devices."
+          echo "   For App Store: Need Apple Developer account + certificates"

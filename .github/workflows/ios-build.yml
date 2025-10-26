@@ -54,6 +54,14 @@ jobs:
         run: flutter build ios --release --no-codesign
         continue-on-error: true # May fail without certificates
       
+      - name: Create IPA Archive
+        run: |
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r camalig_gym_unsigned.ipa Payload
+          rm -rf Payload
+        continue-on-error: true
+      
       - name: Archive Build Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -61,10 +69,23 @@ jobs:
           path: |
             build/ios/iphoneos/Runner.app
             build/ios/iphonesimulator/Runner.app
+            camalig_gym_unsigned.ipa
+          retention-days: 30
+      
+      - name: Upload IPA separately
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: camalig-gym-ios-ipa
+          path: camalig_gym_unsigned.ipa
           retention-days: 30
       
       - name: Build Summary
         run: |
           echo "✅ iOS build completed successfully!"
           echo "📦 Artifacts uploaded"
-          echo "⚠️ Note: Release build requires Apple Developer certificates for code signing"
+          echo "📱 IPA file: camalig_gym_unsigned.ipa"
+          echo "⚠️ Note: This is an unsigned IPA. For App Store distribution, you need:"
+          echo "   - Apple Developer account"
+          echo "   - Valid provisioning profile"
+          echo "   - Code signing certificate"

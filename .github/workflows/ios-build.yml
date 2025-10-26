@@ -65,14 +65,24 @@ jobs:
       - name: Create Simulator ZIP for Appetize.io
         run: |
           cd build/ios/iphonesimulator
-          zip -r ../../../camalig_gym_simulator.zip Runner.app
+          zip -ry ../../../camalig_gym_simulator.zip Runner.app
+          cd ../../..
+          echo "Verifying zip contents:"
+          unzip -l camalig_gym_simulator.zip | head -20
+      
+      - name: Create Simulator TAR.GZ (Alternative format for Appetize.io)
+        run: |
+          cd build/ios/iphonesimulator
+          tar -czf ../../../camalig_gym_simulator.tar.gz Runner.app
           cd ../../..
       
       - name: Upload Simulator Build for Appetize.io
         uses: actions/upload-artifact@v4
         with:
           name: appetize-simulator-build
-          path: camalig_gym_simulator.zip
+          path: |
+            camalig_gym_simulator.zip
+            camalig_gym_simulator.tar.gz
           retention-days: 30
       
       - name: Upload Unsigned IPA (Device Build)
@@ -89,6 +99,7 @@ jobs:
           name: ios-all-builds
           path: |
             camalig_gym_simulator.zip
+            camalig_gym_simulator.tar.gz
             camalig_gym_unsigned.ipa
           retention-days: 30
       
@@ -97,14 +108,16 @@ jobs:
           echo "✅ iOS build completed successfully!"
           echo ""
           echo "📦 Artifacts created:"
-          echo "  🍎 camalig_gym_simulator.zip - For Appetize.io testing"
+          echo "  🍎 camalig_gym_simulator.zip - For Appetize.io (ZIP format)"
+          echo "  🍎 camalig_gym_simulator.tar.gz - For Appetize.io (TAR.GZ format)"
           echo "  📱 camalig_gym_unsigned.ipa - Unsigned device build"
           echo ""
           echo "🧪 Testing on Appetize.io:"
           echo "  1. Go to https://appetize.io"
           echo "  2. Click 'Upload App'"
-          echo "  3. Upload camalig_gym_simulator.zip"
-          echo "  4. Test your app in the browser!"
+          echo "  3. Try uploading camalig_gym_simulator.tar.gz first"
+          echo "  4. If that fails, try camalig_gym_simulator.zip"
+          echo "  5. Test your app in the browser!"
           echo ""
           echo "⚠️ Note: Unsigned IPA cannot be installed on physical devices."
           echo "   For App Store: Need Apple Developer account + certificates"

@@ -16,9 +16,17 @@ This guide shows you how to test the iOS app in your browser using Appetize.io -
 
 1. Visit: https://appetize.io
 2. Click **"Upload App"** or **"Try Demo"**
-3. Select the downloaded `camalig_gym_simulator.zip` file
+3. **Try uploading `camalig_gym_simulator.tar.gz` first** (recommended)
+   - If that doesn't work, try `camalig_gym_simulator.zip`
 4. Choose platform: **iOS**
 5. Wait for upload to complete (~1-2 minutes)
+
+### Troubleshooting Upload Issues:
+
+If you see "No app folder found":
+- ✅ Use the `.tar.gz` file instead of `.zip`
+- ✅ Make sure you extracted the artifact ZIP first, then upload the simulator file inside
+- ✅ The file should contain `Runner.app` at the root level
 
 ## Step 3: Test Your App
 

@@ -1,8 +1,57 @@
 workflows:
-  ios-workflow:
-    name: iOS Workflow
+  # NO APPLE ACCOUNT NEEDED - Unsigned iOS builds for testing
+  ios-unsigned-workflow:
+    name: iOS Unsigned Build (No Apple Account)
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Install pods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+      - name: Flutter analyze
+        script: |
+          flutter analyze
+      - name: Build unsigned iOS app (no codesign)
+        script: |
+          flutter build ios --debug --no-codesign --build-number=$BUILD_NUMBER
+      - name: Create unsigned IPA
+        script: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r camalig_gym_unsigned_$BUILD_NUMBER.ipa Payload
+          mv camalig_gym_unsigned_$BUILD_NUMBER.ipa ../../..
+    artifacts:
+      - build/ios/iphoneos/Runner.app
+      - camalig_gym_unsigned_*.ipa
+      - flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com # Replace with your email
+        notify:
+          success: true
+          failure: true
+
+  # FUTURE: When you get Apple Developer Account ($99/year)
+  ios-signed-workflow:
+    name: iOS Signed Build (Requires Apple Account)
     max_build_duration: 120
     instance_type: mac_mini_m1
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'release/*'
+          include: true
+          source: true
     integrations:
       app_store_connect: codemagic
     environment:
@@ -13,7 +62,7 @@ workflows:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
         BUNDLE_ID: "com.camalig.camaligGym"
-        APP_STORE_APPLE_ID: YOUR_APPLE_ID # Replace with your Apple ID
+        APP_STORE_APPLE_ID: YOUR_APPLE_ID # Replace when you have Apple ID
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -38,52 +87,14 @@ workflows:
       - /tmp/xcodebuild_logs/*.log
       - flutter_drive.log
     publishing:
-      # email:
-      #   recipients:
-      #     - your-email@example.com # Replace with your email
-      #   notify:
-      #     success: true
-      #     failure: true
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
       app_store_connect:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true # Set to true to automatically submit to TestFlight
-        # beta_groups:
-        #   - group_name_1
-        #   - group_name_2
-
-  ios-debug-workflow:
-    name: iOS Debug Build
-    max_build_duration: 60
-    instance_type: mac_mini_m1
-    environment:
-      flutter: stable
-      xcode: latest
-      cocoapods: default
-    scripts:
-      - name: Get Flutter packages
-        script: |
-          flutter packages pub get
-      - name: Install pods
-        script: |
-          find . -name "Podfile" -execdir pod install \;
-      - name: Flutter analyze
-        script: |
-          flutter analyze
-      - name: Flutter test
-        script: |
-          flutter test
-      - name: Flutter build iOS (debug)
-        script: |
-          flutter build ios --debug --no-codesign
-    artifacts:
-      - build/ios/iphoneos/*.app
-      - flutter_drive.log
-    publishing:
-      email:
-        recipients:
-          - your-email@example.com # Replace with your email
-        notify:
-          success: false
-          failure: true
+        submit_to_testflight: true

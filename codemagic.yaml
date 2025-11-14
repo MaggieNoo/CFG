@@ -50,10 +50,12 @@ workflows:
         notify:
           success: true
           failure: true
-      # app_store_connect:
-      #   # Configuration for App Store Connect publishing
-      #   submit_to_testflight: true
-      #   submit_to_app_store: false
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        submit_to_app_store: false
 
   ios-debug-workflow:
     name: iOS Debug Workflow

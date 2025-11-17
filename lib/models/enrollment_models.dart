@@ -38,7 +38,7 @@ class ProgramModel {
     );
 
     // Debug logging to see actual values
-    print('📦 Program: ${program.name}');
+    print('Program: ${program.name}');
     print('   code: "${program.code}"');
     print('   service field: "${program.service}"');
     print('   serviceId field: "${program.serviceId}"');
@@ -62,8 +62,8 @@ class ProgramModel {
       code.toLowerCase().contains('personal');
 
   String get displayRate {
-    if (isConsumable) return '₱$sessionRate/session';
-    return '₱$sessionRate/month';
+    if (isConsumable) return '$sessionRate/session';
+    return '$sessionRate/month';
   }
 
   String get displayDuration {

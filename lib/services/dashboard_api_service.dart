@@ -12,7 +12,7 @@ class DashboardApiService {
       final url =
           Uri.parse('${AppConstants.baseUrl}${AppConstants.dashboardEndpoint}');
 
-      print('🔵 Dashboard API - Get Enrollment Info');
+      print('Dashboard API - Get Enrollment Info');
       print('URL: $url');
       print('itoken: $itoken');
 
@@ -43,7 +43,7 @@ class DashboardApiService {
             enrollments.add(EnrollmentInfoModel.fromJson(data['data'][i]));
           }
 
-          print('✅ Found ${enrollments.length} active enrollment(s)');
+          print(' Found ${enrollments.length} active enrollment(s)');
 
           return {
             'success': true,
@@ -63,7 +63,7 @@ class DashboardApiService {
         };
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       return {
         'success': false,
         'message': 'Connection error: $e',
@@ -81,7 +81,7 @@ class DashboardApiService {
       final url =
           Uri.parse('${AppConstants.baseUrl}${AppConstants.dashboardEndpoint}');
 
-      print('🔵 Dashboard API - Get Notifications');
+      print('Dashboard API - Get Notifications');
       print('URL: $url');
       print('Page: $page, Limit: $limit');
 
@@ -123,7 +123,7 @@ class DashboardApiService {
         };
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       return {
         'success': false,
         'message': 'Connection error: $e',
@@ -149,7 +149,7 @@ class DashboardApiService {
       final frDate = dateFormat.format(from);
       final toDate_ = dateFormat.format(to);
 
-      print('🔵 Dashboard API - Get Calendar Events');
+      print('Dashboard API - Get Calendar Events');
       print('URL: $url');
       print('Date Range: $frDate to $toDate_');
 
@@ -193,7 +193,7 @@ class DashboardApiService {
         };
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       return {
         'success': false,
         'message': 'Connection error: $e',
@@ -212,7 +212,7 @@ class DashboardApiService {
       final url =
           Uri.parse('${AppConstants.baseUrl}${AppConstants.dashboardEndpoint}');
 
-      print('🔵 Dashboard API - Update DTR Label');
+      print('Dashboard API - Update DTR Label');
       print('DTR ID: $dtrId');
 
       final response = await http.post(
@@ -243,7 +243,7 @@ class DashboardApiService {
         };
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       return {
         'success': false,
         'message': 'Connection error: $e',

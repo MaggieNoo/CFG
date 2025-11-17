@@ -12,7 +12,7 @@ class EnrollmentApiService {
       final url =
           Uri.parse('${AppConstants.baseUrl}${AppConstants.enrollEndpoint}');
 
-      print('🔵 Enrollment API - Get Programs & Trainors');
+      print('Enrollment API - Get Programs & Trainors');
       print('URL: $url');
 
       final response = await http.post(
@@ -52,10 +52,11 @@ class EnrollmentApiService {
         };
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print('Error in getProgramsAndTrainors: $e');
       return {
         'success': false,
-        'message': 'Connection error: $e',
+        'message': 'Failed to load programs. Please try again.',
+        'error': e.toString(),
       };
     }
   }
@@ -79,7 +80,7 @@ class EnrollmentApiService {
       final dated = dateFormat.format(startDate);
       final ended = endDate != null ? dateFormat.format(endDate) : '';
 
-      print('🔵 Enrollment API - Submit Enrollment');
+      print('Enrollment API - Submit Enrollment');
       print('URL: $url');
       print('Type: $type, Amount: $amountPaid, Trainor: $trainorId');
       print('Start: $dated, End: $ended');
@@ -139,7 +140,7 @@ class EnrollmentApiService {
         };
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       return {
         'success': false,
         'message': 'Connection error: $e',

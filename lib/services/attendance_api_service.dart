@@ -17,7 +17,7 @@ class AttendanceApiService {
       final url = Uri.parse(
           '${AppConstants.baseUrl}${AppConstants.attendanceEndpoint}');
 
-      print('🔵 Attendance API - Get Records');
+      print('Attendance API - Get Records');
       print('URL: $url');
       print('Page: $page, Limit: $limit');
       if (fromDate != null) print('From: $fromDate');
@@ -77,7 +77,7 @@ class AttendanceApiService {
         };
       }
     } catch (e) {
-      print('❌ Error: $e');
+      print(' Error: $e');
       return {
         'success': false,
         'message': 'Connection error: $e',

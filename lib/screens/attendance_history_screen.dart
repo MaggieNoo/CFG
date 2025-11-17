@@ -448,7 +448,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       child: _buildDetailRow(
                         Icons.payments,
                         'Payment',
-                        '₱${double.tryParse(record.paid)?.toStringAsFixed(2) ?? '0.00'}',
+                        '${double.tryParse(record.paid)?.toStringAsFixed(2) ?? '0.00'}',
                       ),
                     ),
                   ],

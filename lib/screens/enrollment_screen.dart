@@ -615,7 +615,7 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
 
                   // Title
                   Text(
-                    'Enrollment Successful! 🎉',
+                    'Enrollment Successful! ',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -805,7 +805,7 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '₱${widget.program.dailyRate}',
+                                  '${widget.program.dailyRate}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
@@ -838,7 +838,7 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '₱${widget.program.sessionRate}',
+                                  '${widget.program.sessionRate}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
@@ -996,7 +996,7 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
               ),
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
-                prefixText: '₱ ',
+                prefixText: ' ',
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 filled: true,
@@ -1019,7 +1019,7 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                prefixText: '₱ ',
+                prefixText: ' ',
                 hintText: '0.00',
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 16, vertical: 12),

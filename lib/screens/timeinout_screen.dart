@@ -212,7 +212,7 @@ class _TimeInOutScreenState extends State<TimeInOutScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '${enrollment.daysLeftInfo} • ${enrollment.sessionInfo}',
+                                '${enrollment.daysLeftInfo}  ${enrollment.sessionInfo}',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.white.withOpacity(0.9),
@@ -513,14 +513,14 @@ class _TimeInOutScreenState extends State<TimeInOutScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Total Paid: ₱${paidAmount.toStringAsFixed(2)}',
+              'Total Paid: ${paidAmount.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
               ),
             ),
             Text(
-              'Balance: ₱${balance.toStringAsFixed(2)}',
+              'Balance: ${balance.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.orange,
@@ -533,7 +533,7 @@ class _TimeInOutScreenState extends State<TimeInOutScreen> {
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Amount to Pay',
-                prefixText: '₱',
+                prefixText: '',
                 border: OutlineInputBorder(),
               ),
               autofocus: true,

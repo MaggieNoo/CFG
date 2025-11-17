@@ -158,7 +158,7 @@ class TimeInOutResponse {
               EnrollmentOption.fromJson(enrollment as Map<String, dynamic>));
         }
       } catch (e) {
-        print('❌ Error parsing enrollment options: $e');
+        print(' Error parsing enrollment options: $e');
       }
 
       return TimeInOutResponse(
@@ -181,7 +181,7 @@ class TimeInOutResponse {
       try {
         attendanceModel = TimeInOutModel.fromJson(json);
       } catch (e) {
-        print('❌ Error parsing TimeInOutModel: $e');
+        print(' Error parsing TimeInOutModel: $e');
         // If parsing fails, attendance will remain null
       }
     }

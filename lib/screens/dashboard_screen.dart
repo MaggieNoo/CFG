@@ -348,20 +348,20 @@ class _HomeTabState extends State<_HomeTab> {
         widget.user.token,
       );
 
-      print('🔍 Dashboard - Enrollment Result: $enrollmentResult');
+      print(' Dashboard - Enrollment Result: $enrollmentResult');
 
       if (enrollmentResult['success']) {
         final List<EnrollmentInfoModel> enrollments =
             enrollmentResult['enrollments'] ?? [];
         _enrollments = enrollments;
-        print('🔍 Dashboard - ${_enrollments.length} enrollment(s) loaded');
+        print(' Dashboard - ${_enrollments.length} enrollment(s) loaded');
         for (var e in _enrollments) {
           print(
               '  - ${e.program} (${e.isPersonalTraining ? "PT" : "Regular"})');
         }
       } else {
         print(
-            '🔍 Dashboard - Enrollment failed: ${enrollmentResult['message']}');
+            ' Dashboard - Enrollment failed: ${enrollmentResult['message']}');
         _enrollments = [];
       }
 
@@ -795,14 +795,14 @@ class _HomeTabState extends State<_HomeTab> {
   }
 
   String _getTotalBalance() {
-    if (_enrollments.isEmpty) return '₱0.00';
+    if (_enrollments.isEmpty) return '0.00';
     double total = 0;
 
     for (var enrollment in _enrollments) {
       total += enrollment.remainingBalance;
     }
 
-    return '₱${total.toStringAsFixed(2)}';
+    return '${total.toStringAsFixed(2)}';
   }
 
   // Build individual enrollment card
@@ -924,7 +924,7 @@ class _HomeTabState extends State<_HomeTab> {
               _buildEnrollmentStat('Sessions Used', enrollment.sessionsDisplay),
               Container(width: 1, height: 30, color: Colors.white30),
               _buildEnrollmentStat('Total Paid',
-                  '₱${enrollment.completeTotalPaid.toStringAsFixed(2)}'),
+                  '${enrollment.completeTotalPaid.toStringAsFixed(2)}'),
               Container(width: 1, height: 30, color: Colors.white30),
               _buildEnrollmentStat('Ends',
                   enrollment.endDate.isNotEmpty ? enrollment.endDate : 'N/A'),

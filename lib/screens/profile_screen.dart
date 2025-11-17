@@ -46,12 +46,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           user = reloadedUser;
         });
-        print('✓ User data reloaded and UI updated');
+        print(' User data reloaded and UI updated');
       } else {
-        print('⚠ No user data found in SharedPreferences');
+        print(' No user data found in SharedPreferences');
       }
     } catch (e) {
-      print('✗ Error reloading user data: $e');
+      print(' Error reloading user data: $e');
     }
   }
 

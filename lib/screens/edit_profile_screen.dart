@@ -221,12 +221,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   'UpdatedUser profileImage length: ${updatedUser.profileImage?.length ?? 0}');
               await prefs.setString(
                   AppConstants.keyUserData, json.encode(updatedUser.toJson()));
-              print('✓ Updated user data saved to SharedPreferences');
+              print(' Updated user data saved to SharedPreferences');
             } catch (e) {
-              print('✗ Error saving updated user data: $e');
+              print(' Error saving updated user data: $e');
             }
           } else {
-            print('⚠ No userData in result - profile image will not update');
+            print(' No userData in result - profile image will not update');
           }
 
           // Show success dialog

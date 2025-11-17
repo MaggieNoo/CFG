@@ -112,7 +112,7 @@ class EnrollmentInfoModel {
       final diff = endDateOnly.difference(nowDateOnly).inDays;
       return diff > 0 ? diff : 0;
     } catch (e) {
-      print('❌ Error parsing ended date: $ended - $e');
+      print(' Error parsing ended date: $ended - $e');
       return 0;
     }
   }

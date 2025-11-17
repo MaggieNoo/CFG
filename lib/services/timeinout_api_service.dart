@@ -10,7 +10,7 @@ class TimeInOutApiService {
     required String qrCode,
   }) async {
     try {
-      print('🔍 DEBUG - Sending QR scan request:');
+      print(' DEBUG - Sending QR scan request:');
       print('   itoken (user.id): $itoken');
       print('   qrCode: $qrCode');
 
@@ -26,7 +26,7 @@ class TimeInOutApiService {
         },
       );
 
-      print('📱 Scan QR Code Response: ${response.body}');
+      print(' Scan QR Code Response: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -35,7 +35,7 @@ class TimeInOutApiService {
         throw Exception('Server returned ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Scan QR Code Error: $e');
+      print(' Scan QR Code Error: $e');
       return TimeInOutResponse(
         result: '0',
         message: 'Failed to process QR code: $e',
@@ -64,7 +64,7 @@ class TimeInOutApiService {
         },
       );
 
-      print('📤 Submit Time Action Response: ${response.body}');
+      print(' Submit Time Action Response: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -73,7 +73,7 @@ class TimeInOutApiService {
         throw Exception('Server returned ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Submit Time Action Error: $e');
+      print(' Submit Time Action Error: $e');
       return TimeActionResponse(
         result: '0',
         message: 'Failed to submit action: $e',
@@ -97,7 +97,7 @@ class TimeInOutApiService {
         },
       );
 
-      print('🔄 Time-in Again Response: ${response.body}');
+      print(' Time-in Again Response: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -106,7 +106,7 @@ class TimeInOutApiService {
         throw Exception('Server returned ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Time-in Again Error: $e');
+      print(' Time-in Again Error: $e');
       return TimeActionResponse(
         result: '0',
         message: 'Failed to time-in again: $e',
@@ -119,7 +119,7 @@ class TimeInOutApiService {
     required String enrollmentId,
   }) async {
     try {
-      print('🔍 DEBUG - Time-in to specific enrollment:');
+      print(' DEBUG - Time-in to specific enrollment:');
       print('   enrollmentId: $enrollmentId');
 
       final response = await http.post(
@@ -133,7 +133,7 @@ class TimeInOutApiService {
         },
       );
 
-      print('📱 Time-in to Enrollment Response: ${response.body}');
+      print(' Time-in to Enrollment Response: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -142,7 +142,7 @@ class TimeInOutApiService {
         throw Exception('Server returned ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Time-in to Enrollment Error: $e');
+      print(' Time-in to Enrollment Error: $e');
       return TimeInOutResponse(
         result: '0',
         message: 'Failed to time-in to enrollment: $e',

@@ -423,7 +423,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '₱${_getTotalPaid().toStringAsFixed(2)}',
+                  '${_getTotalPaid().toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 36,
@@ -624,7 +624,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
               ),
             ),
             Text(
-              '₱${payment.paidAmount.toStringAsFixed(2)}',
+              '${payment.paidAmount.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

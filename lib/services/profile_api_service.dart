@@ -96,17 +96,17 @@ class ProfileApiService {
               try {
                 print('Attempting to parse user data...');
                 userData = json.decode(data['data']);
-                print('✓ User data parsed successfully');
+                print(' User data parsed successfully');
                 print(
                     'Profile field exists: ${userData?.containsKey('profile')}');
                 print(
                     'Profile field length: ${userData?['profile']?.toString().length ?? 0}');
               } catch (e) {
-                print('✗ Error parsing user data: $e');
+                print(' Error parsing user data: $e');
                 print('data content: ${data['data']}');
               }
             } else {
-              print('⚠ data field is null or empty');
+              print(' data field is null or empty');
             }
 
             return {

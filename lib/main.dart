@@ -2,9 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/login_screen.dart';
 import 'utils/constants.dart';
+import 'utils/environment_config.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Set environment - automatically uses production for release builds
+  // For TestFlight and App Store: Always production
+  // For local development: Change to Environment.development
+  EnvironmentConfig.setEnvironment(Environment.production);
+  EnvironmentConfig.printConfig(); // Shows which environment is active
 
   // Set preferred orientations
   SystemChrome.setPreferredOrientations([

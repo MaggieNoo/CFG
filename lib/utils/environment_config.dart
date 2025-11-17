@@ -8,7 +8,9 @@ enum Environment {
 }
 
 class EnvironmentConfig {
-  static Environment _currentEnvironment = Environment.development;
+  // Default to production for release builds, development for debug builds
+  static Environment _currentEnvironment =
+      kReleaseMode ? Environment.production : Environment.development;
 
   // Toggle this to switch environments easily
   static Environment get currentEnvironment => _currentEnvironment;
@@ -31,7 +33,7 @@ class EnvironmentConfig {
 
       case Environment.production:
         // Your production server
-        return 'https://camaligfitnessgym.com/mobile/';
+        return 'https://v2.camaligfitnessgym.com/mobile/';
 
       case Environment.demo:
         // Demo mode - uses mock data, no actual server

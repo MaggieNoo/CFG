@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.camalig.fitness_gym"
+    namespace "com.camalig.camaligGym"
     compileSdk 35
     ndkVersion flutter.ndkVersion
 
@@ -41,7 +41,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.camalig.fitness_gym"
+        applicationId "com.camalig.camaligGym"
         minSdk 21
         targetSdk 35
         versionCode flutterVersionCode.toInteger()

@@ -1,4 +1,4 @@
-package com.camalig.fitness_gym
+package com.camalig.camaligGym
 
 import io.flutter.embedding.android.FlutterActivity
 

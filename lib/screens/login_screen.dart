@@ -4,7 +4,6 @@ import '../services/auth_service.dart';
 import '../utils/constants.dart';
 import '../utils/validators.dart';
 import '../utils/environment_config.dart';
-import '../widgets/environment_debug_banner.dart';
 import 'register_screen.dart';
 import 'dashboard_screen.dart';
 
@@ -352,10 +351,8 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-      // Environment debug banner (only shows in debug mode)
-      const EnvironmentDebugBanner(),
       ],
+      ),
     );
   }
 

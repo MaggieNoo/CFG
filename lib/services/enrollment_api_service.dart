@@ -55,11 +55,14 @@ class EnrollmentApiService {
           }
         } else {
           print('Missing expected fields in response');
+          final responsePreview = response.body.length > 200
+              ? '${response.body.substring(0, 200)}...'
+              : response.body;
           return {
             'success': false,
             'message': data['msg'] ??
                 data['message'] ??
-                'Failed to load programs. Server response missing required data.',
+                'Failed to load programs.\n\nServer response: $responsePreview',
           };
         }
       } else {

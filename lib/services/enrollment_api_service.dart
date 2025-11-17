@@ -30,19 +30,36 @@ class EnrollmentApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
 
+        print('Response keys: ${data.keys.toList()}');
+        print('Has pids: ${data.containsKey('pids')}');
+        print('Has pid: ${data.containsKey('pid')}');
+        print('Has programs: ${data.containsKey('programs')}');
+        print('Has trainors: ${data.containsKey('trainors')}');
+
         // Check if response contains the expected fields (pids for new format, pid for old format)
         if (data.containsKey('pids') ||
             data.containsKey('pid') ||
             data.containsKey('programs')) {
-          final enrollmentData = EnrollmentResponse.fromJson(data);
-          return {
-            'success': true,
-            'data': enrollmentData,
-          };
+          try {
+            final enrollmentData = EnrollmentResponse.fromJson(data);
+            return {
+              'success': true,
+              'data': enrollmentData,
+            };
+          } catch (e) {
+            print('Error parsing enrollment data: $e');
+            return {
+              'success': false,
+              'message': 'Error parsing programs data: $e',
+            };
+          }
         } else {
+          print('Missing expected fields in response');
           return {
             'success': false,
-            'message': data['msg'] ?? 'Failed to load programs',
+            'message': data['msg'] ??
+                data['message'] ??
+                'Failed to load programs. Server response missing required data.',
           };
         }
       } else {

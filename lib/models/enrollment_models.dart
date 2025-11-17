@@ -131,17 +131,30 @@ class EnrollmentResponse {
   });
 
   factory EnrollmentResponse.fromJson(Map<String, dynamic> json) {
+    print('Parsing EnrollmentResponse...');
+    print('JSON keys: ${json.keys.toList()}');
+
     final List<TrainorModel> trainors = [];
     if (json['trainors'] != null && json['trainors'] is List) {
+      print('Found ${(json['trainors'] as List).length} trainors');
       for (var trainorData in json['trainors']) {
-        trainors.add(TrainorModel.fromJson(trainorData));
+        try {
+          trainors.add(TrainorModel.fromJson(trainorData));
+        } catch (e) {
+          print('Error parsing trainor: $e');
+        }
       }
     }
 
     final List<BranchProgramsModel> branchPrograms = [];
     if (json['programs'] != null && json['programs'] is List) {
+      print('Found ${(json['programs'] as List).length} branches');
       for (var branchData in json['programs']) {
-        branchPrograms.add(BranchProgramsModel.fromJson(branchData));
+        try {
+          branchPrograms.add(BranchProgramsModel.fromJson(branchData));
+        } catch (e) {
+          print('Error parsing branch programs: $e');
+        }
       }
     }
 
@@ -153,13 +166,19 @@ class EnrollmentResponse {
           .map((id) => id.toString())
           .where((id) => id.isNotEmpty && id != '0')
           .toList();
+      print('Found ${enrolledIds.length} enrolled program IDs (pids)');
     } else if (json['pid'] != null) {
       // Old format - single enrolled program (backward compatibility)
       final pid = json['pid'].toString();
       if (pid.isNotEmpty && pid != '0') {
         enrolledIds = [pid];
+        print('Found 1 enrolled program ID (pid): $pid');
       }
     }
+
+    print('Total branches: ${branchPrograms.length}');
+    print('Total trainors: ${trainors.length}');
+    print('Enrolled IDs: $enrolledIds');
 
     return EnrollmentResponse(
       enrolledProgramIds: enrolledIds,

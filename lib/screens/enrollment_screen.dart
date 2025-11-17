@@ -101,19 +101,33 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
-                      color: Colors.orange[50],
-                      child: Row(
+                      color: Colors.green[50],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.info_outline,
-                              color: Colors.orange[700], size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'You already have an active enrollment',
-                              style: TextStyle(
-                                color: Colors.orange[900],
-                                fontSize: 14,
+                          Row(
+                            children: [
+                              Icon(Icons.check_circle,
+                                  color: Colors.green[700], size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Active Enrollments (${_enrollmentData!.enrollmentCount})',
+                                  style: TextStyle(
+                                    color: Colors.green[900],
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'You can enroll in one regular program and one Personal Training program simultaneously.',
+                            style: TextStyle(
+                              color: Colors.green[800],
+                              fontSize: 13,
                             ),
                           ),
                         ],
@@ -206,7 +220,7 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
   }
 
   Widget _buildProgramTile(ProgramModel program, BranchProgramsModel branch) {
-    final isEnrolled = _enrollmentData!.currentProgramId == program.id;
+    final isEnrolled = _enrollmentData!.isProgramEnrolled(program.id);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -298,6 +312,33 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
                     ),
                   ),
                 ),
+                if (program.isPersonalTraining) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.person, size: 12, color: Colors.purple[700]),
+                        const SizedBox(width: 4),
+                        Text(
+                          'PT',
+                          style: TextStyle(
+                            color: Colors.purple[700],
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ],
@@ -305,9 +346,9 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
         trailing: isEnrolled
             ? Icon(Icons.check_circle, color: Colors.green, size: 32)
             : ElevatedButton(
-                onPressed: _enrollmentData!.hasActiveEnrollment
-                    ? null
-                    : () => _showEnrollmentDialog(program, branch),
+                onPressed: _canEnrollInProgram(program)
+                    ? () => _showEnrollmentDialog(program, branch)
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppConstants.primaryColor,
                   foregroundColor: Colors.white,
@@ -328,6 +369,29 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
 
   String _getServiceLabel(ProgramModel program) {
     return program.isConsumable ? 'Consumable' : 'Monthly';
+  }
+
+  bool _canEnrollInProgram(ProgramModel program) {
+    // If no enrollments, can enroll in anything
+    if (!_enrollmentData!.hasActiveEnrollment) return true;
+
+    // Check if trying to enroll in same program type
+    final enrolledPrograms = _enrollmentData!.branchPrograms
+        .expand((branch) => branch.programs)
+        .where((p) => _enrollmentData!.isProgramEnrolled(p.id))
+        .toList();
+
+    final hasRegularProgram =
+        enrolledPrograms.any((p) => !p.isPersonalTraining);
+    final hasPTProgram = enrolledPrograms.any((p) => p.isPersonalTraining);
+
+    if (program.isPersonalTraining) {
+      // Can enroll in PT if don't have PT yet
+      return !hasPTProgram;
+    } else {
+      // Can enroll in regular if don't have regular yet
+      return !hasRegularProgram;
+    }
   }
 
   void _showEnrollmentDialog(ProgramModel program, BranchProgramsModel branch) {
@@ -427,13 +491,6 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
       return;
     }
 
-    if (selectedTrainor == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a trainor')),
-      );
-      return;
-    }
-
     if (amountPaidController.text.isEmpty ||
         double.tryParse(amountPaidController.text) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -468,7 +525,7 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
         programToken: widget.program.itoken,
         type: selectedType!,
         amountPaid: amountPaidController.text,
-        trainorId: selectedTrainor!.id,
+        trainorId: selectedTrainor?.id ?? '',
         startDate: startDate ?? DateTime.now(),
         endDate: endDate,
       );
@@ -1083,13 +1140,35 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
             const Divider(thickness: 1),
             const SizedBox(height: 24),
 
-            // Trainor Selection
-            const Text(
-              'Trainor',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+            // Trainor Selection (Optional)
+            Row(
+              children: [
+                const Text(
+                  'Trainor',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.blue[200]!),
+                  ),
+                  child: Text(
+                    'Optional',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.blue[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Container(
@@ -1106,7 +1185,7 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
                     hint: const Padding(
                       padding:
                           EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      child: Text('Select Trainor'),
+                      child: Text('Select Trainor (Optional)'),
                     ),
                     isExpanded: true,
                     icon: const Padding(
@@ -1178,7 +1257,8 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    selectedTrainor?.name ?? 'Select Trainor',
+                                    selectedTrainor?.name ??
+                                        'Select Trainor (Optional)',
                                     style: const TextStyle(
                                         fontSize: 15, color: Colors.black87),
                                     overflow: TextOverflow.ellipsis,
@@ -1192,6 +1272,36 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
                     },
                   ),
                 ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.blue[700],
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'You can enroll independently or select a trainer if you prefer personalized guidance.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[900],
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 20),

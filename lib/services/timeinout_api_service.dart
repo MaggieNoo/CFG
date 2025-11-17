@@ -113,4 +113,40 @@ class TimeInOutApiService {
       );
     }
   }
+
+  // Time-in to a specific enrollment (when user has multiple enrollments)
+  static Future<TimeInOutResponse> timeInToEnrollment({
+    required String enrollmentId,
+  }) async {
+    try {
+      print('🔍 DEBUG - Time-in to specific enrollment:');
+      print('   enrollmentId: $enrollmentId');
+
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}qr.account.php'),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: {
+          'token': AppConstants.apiToken,
+          'key': 'gym',
+          'ftr': '100-3', // Time-in to specific enrollment
+          'eid': enrollmentId,
+        },
+      );
+
+      print('📱 Time-in to Enrollment Response: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return TimeInOutResponse.fromJson(data);
+      } else {
+        throw Exception('Server returned ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Time-in to Enrollment Error: $e');
+      return TimeInOutResponse(
+        result: '0',
+        message: 'Failed to time-in to enrollment: $e',
+      );
+    }
+  }
 }

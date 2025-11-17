@@ -27,6 +27,14 @@ class ProfileApiService {
       print('User ID: $userId');
       print('Birthday: $birthday');
 
+      // Calculate request size
+      final profileSize =
+          (profileBase64?.length ?? 0) * 0.75 / 1024; // Approximate KB
+      print(
+          'Profile image size in request: ${profileSize.toStringAsFixed(2)} KB');
+      print(
+          'Sending profile image: ${(profileBase64?.isNotEmpty ?? false) ? "YES" : "NO"}');
+
       final response = await http.post(
         Uri.parse(url),
         body: {
@@ -52,21 +60,81 @@ class ProfileApiService {
 
       print('Update Profile Response Status: ${response.statusCode}');
       print('Update Profile Response Body: ${response.body}');
+      print('Response length: ${response.body.length} characters');
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-
-        if (data['count'] == '1') {
-          return {
-            'success': true,
-            'message': 'Profile updated successfully',
-          };
-        } else {
+        // Check if response is JSON
+        if (!response.body.trim().startsWith('{') &&
+            !response.body.trim().startsWith('[')) {
+          print('ERROR: Server returned non-JSON response');
+          print('Full response:');
+          print(response.body);
           return {
             'success': false,
-            'message': data['result'] ?? 'Update failed',
+            'message': 'Server error. Please check the logs for details.',
           };
         }
+
+        try {
+          final Map<String, dynamic> data = json.decode(response.body);
+
+          print('=== Backend Response ===');
+          print('count: ${data['count']}');
+          print('result: ${data['result']}');
+          print('has data field: ${data.containsKey('data')}');
+          print('data is null: ${data['data'] == null}');
+          if (data['data'] != null) {
+            final dataStr = data['data'].toString();
+            final previewLen = dataStr.length > 100 ? 100 : dataStr.length;
+            print('data value: ${dataStr.substring(0, previewLen)}...');
+          }
+
+          if (data['count'] == '1') {
+            // Parse updated user data if provided
+            Map<String, dynamic>? userData;
+            if (data['data'] != null && data['data'].toString().isNotEmpty) {
+              try {
+                print('Attempting to parse user data...');
+                userData = json.decode(data['data']);
+                print('✓ User data parsed successfully');
+                print(
+                    'Profile field exists: ${userData?.containsKey('profile')}');
+                print(
+                    'Profile field length: ${userData?['profile']?.toString().length ?? 0}');
+              } catch (e) {
+                print('✗ Error parsing user data: $e');
+                print('data content: ${data['data']}');
+              }
+            } else {
+              print('⚠ data field is null or empty');
+            }
+
+            return {
+              'success': true,
+              'message': 'Profile updated successfully',
+              'userData': userData, // Return updated user data
+            };
+          } else {
+            return {
+              'success': false,
+              'message': data['result'] ?? 'Update failed',
+            };
+          }
+        } on FormatException catch (e) {
+          print('JSON Parse Error: $e');
+          print('Response Body: ${response.body}');
+          return {
+            'success': false,
+            'message':
+                'Server error: Invalid response format. Check server logs.',
+          };
+        }
+      } else if (response.statusCode == 413) {
+        return {
+          'success': false,
+          'message':
+              'Image too large. Please try a smaller photo or contact support.',
+        };
       } else {
         return {
           'success': false,

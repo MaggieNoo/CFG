@@ -51,10 +51,12 @@ class ApiService {
       }
     } on SocketException catch (e) {
       print('SocketException: $e'); // Debug log
+      final isDev = AppConstants.baseUrl.contains('192.168');
       return {
         'success': false,
-        'message':
-            'Cannot connect to server. Please check:\n1. XAMPP is running\n2. Same WiFi network\n3. IP: ${AppConstants.baseUrl}',
+        'message': isDev
+            ? 'Cannot connect to server. Please check:\n1. XAMPP is running\n2. Same WiFi network\n3. IP: ${AppConstants.baseUrl}'
+            : 'Cannot connect to server. Please check your internet connection.\n\nServer: ${AppConstants.baseUrl}',
       };
     } catch (e) {
       print('Error: $e'); // Debug log

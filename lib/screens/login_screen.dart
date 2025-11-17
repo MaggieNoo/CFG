@@ -3,6 +3,8 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/constants.dart';
 import '../utils/validators.dart';
+import '../utils/environment_config.dart';
+import '../widgets/environment_debug_banner.dart';
 import 'register_screen.dart';
 import 'dashboard_screen.dart';
 
@@ -89,27 +91,29 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppConstants.primaryColor,
-              AppConstants.primaryColor.withOpacity(0.8),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Logo
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppConstants.primaryColor,
+                  AppConstants.primaryColor.withOpacity(0.8),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Logo
                     Container(
                       height: 100,
                       width: 100,
@@ -349,6 +353,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+      // Environment debug banner (only shows in debug mode)
+      const EnvironmentDebugBanner(),
+      ],
     );
   }
 

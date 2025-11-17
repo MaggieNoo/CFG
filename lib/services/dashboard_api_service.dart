@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 class DashboardApiService {
   /// Get enrollment information (ft=200)
+  /// Returns List<EnrollmentInfoModel> to support dual enrollment
   static Future<Map<String, dynamic>> getEnrollmentInfo(String itoken) async {
     try {
       final url =
@@ -33,12 +34,22 @@ class DashboardApiService {
             data['data'] != null &&
             data['data'] is List &&
             data['data'].length > 1) {
-          // The API returns an array: [{"total":count}, enrollmentRecord]
-          // Index 0 is the count, index 1 is the enrollment record
-          final enrollmentData = data['data'][1];
+          // Backend now returns array of ALL active enrollments (not just latest)
+          // First element [0] is count {"total":count}
+          // Remaining elements [1+] are enrollment records
+          final List<EnrollmentInfoModel> enrollments = [];
+
+          for (int i = 1; i < data['data'].length; i++) {
+            enrollments.add(EnrollmentInfoModel.fromJson(data['data'][i]));
+          }
+
+          print('✅ Found ${enrollments.length} active enrollment(s)');
+
           return {
             'success': true,
-            'enrollment': EnrollmentInfoModel.fromJson(enrollmentData),
+            'enrollments':
+                enrollments, // Changed from 'enrollment' to 'enrollments' (List)
+            'count': enrollments.length,
           };
         }
         return {

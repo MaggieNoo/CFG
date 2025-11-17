@@ -2,6 +2,7 @@ class ProgramModel {
   final String id;
   final String serviceId;
   final String name;
+  final String code;
   final String dailyRate;
   final String sessionRate;
   final String sessions;
@@ -13,6 +14,7 @@ class ProgramModel {
     required this.id,
     required this.serviceId,
     required this.name,
+    required this.code,
     required this.dailyRate,
     required this.sessionRate,
     required this.sessions,
@@ -26,6 +28,7 @@ class ProgramModel {
       id: json['id']?.toString() ?? '',
       serviceId: json['sid']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
+      code: json['code']?.toString() ?? '',
       dailyRate: json['drate']?.toString() ?? '0.00',
       sessionRate: json['srate']?.toString() ?? '0.00',
       sessions: json['ses']?.toString() ?? '0',
@@ -36,9 +39,11 @@ class ProgramModel {
 
     // Debug logging to see actual values
     print('📦 Program: ${program.name}');
+    print('   code: "${program.code}"');
     print('   service field: "${program.service}"');
     print('   serviceId field: "${program.serviceId}"');
     print('   isConsumable: ${program.isConsumable}');
+    print('   isPersonalTraining: ${program.isPersonalTraining}');
     print('   sessions: ${program.sessions}, duration: ${program.duration}');
 
     return program;
@@ -48,6 +53,13 @@ class ProgramModel {
   // '1' = Monthly (regular gym membership)
   // '2' = Consumable (session-based with sessions and duration)
   bool get isConsumable => service == '2';
+
+  // Check if this is a Personal Training program
+  bool get isPersonalTraining =>
+      name.toLowerCase().contains('personal training') ||
+      name.toLowerCase().contains('pt') ||
+      code.toUpperCase() == 'PT' ||
+      code.toLowerCase().contains('personal');
 
   String get displayRate {
     if (isConsumable) return '₱$sessionRate/session';
@@ -108,12 +120,12 @@ class TrainorModel {
 }
 
 class EnrollmentResponse {
-  final String currentProgramId;
+  final List<String> enrolledProgramIds;
   final List<TrainorModel> trainors;
   final List<BranchProgramsModel> branchPrograms;
 
   EnrollmentResponse({
-    required this.currentProgramId,
+    required this.enrolledProgramIds,
     required this.trainors,
     required this.branchPrograms,
   });
@@ -133,15 +145,38 @@ class EnrollmentResponse {
       }
     }
 
+    // Handle both old 'pid' (single) and new 'pids' (multiple) format
+    List<String> enrolledIds = [];
+    if (json['pids'] != null && json['pids'] is List) {
+      // New format - multiple enrolled programs
+      enrolledIds = (json['pids'] as List)
+          .map((id) => id.toString())
+          .where((id) => id.isNotEmpty && id != '0')
+          .toList();
+    } else if (json['pid'] != null) {
+      // Old format - single enrolled program (backward compatibility)
+      final pid = json['pid'].toString();
+      if (pid.isNotEmpty && pid != '0') {
+        enrolledIds = [pid];
+      }
+    }
+
     return EnrollmentResponse(
-      currentProgramId: json['pid']?.toString() ?? '',
+      enrolledProgramIds: enrolledIds,
       trainors: trainors,
       branchPrograms: branchPrograms,
     );
   }
 
-  bool get hasActiveEnrollment =>
-      currentProgramId.isNotEmpty && currentProgramId != '0';
+  bool get hasActiveEnrollment => enrolledProgramIds.isNotEmpty;
+
+  // Check if a specific program is enrolled
+  bool isProgramEnrolled(String programId) {
+    return enrolledProgramIds.contains(programId);
+  }
+
+  // Get count of active enrollments
+  int get enrollmentCount => enrolledProgramIds.length;
 
   List<TrainorModel> getTrainorsByBranch(String branchId) {
     return trainors.where((t) => t.branchId == branchId).toList();

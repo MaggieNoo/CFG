@@ -55,7 +55,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
       ),
       ProfileScreen(
-        user: widget.user,
+        initialUser: widget.user,
         onNavigateToTab: (index) {
           setState(() => _currentIndex = index); // Navigate to requested tab
         },
@@ -327,7 +327,7 @@ class _HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<_HomeTab> {
   bool _isLoading = true;
-  EnrollmentInfoModel? _enrollment;
+  List<EnrollmentInfoModel> _enrollments = []; // Changed from single to List
   String? _errorMessage;
 
   @override
@@ -351,13 +351,18 @@ class _HomeTabState extends State<_HomeTab> {
       print('🔍 Dashboard - Enrollment Result: $enrollmentResult');
 
       if (enrollmentResult['success']) {
-        _enrollment = enrollmentResult['enrollment'];
-        print('🔍 Dashboard - Enrollment loaded: ${_enrollment?.program}');
-        print('🔍 Dashboard - Is Enrolled: ${_enrollment?.isEnrolled}');
-        print('🔍 Dashboard - ID: ${_enrollment?.id}');
+        final List<EnrollmentInfoModel> enrollments =
+            enrollmentResult['enrollments'] ?? [];
+        _enrollments = enrollments;
+        print('🔍 Dashboard - ${_enrollments.length} enrollment(s) loaded');
+        for (var e in _enrollments) {
+          print(
+              '  - ${e.program} (${e.isPersonalTraining ? "PT" : "Regular"})');
+        }
       } else {
         print(
             '🔍 Dashboard - Enrollment failed: ${enrollmentResult['message']}');
+        _enrollments = [];
       }
 
       setState(() {
@@ -447,14 +452,38 @@ class _HomeTabState extends State<_HomeTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Quick Stats
-                  const Text(
-                    'Quick Stats',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppConstants.textPrimary,
-                    ),
+                  // Quick Stats - Aggregated from all enrollments
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Quick Stats',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppConstants.textPrimary,
+                        ),
+                      ),
+                      if (_enrollments.length > 1)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppConstants.accentColor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${_enrollments.length} Active Programs',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 16),
 
@@ -463,12 +492,16 @@ class _HomeTabState extends State<_HomeTab> {
                       Expanded(
                         child: _buildStatCard(
                           icon: Icons.fitness_center,
-                          title: _enrollment?.isEnrolled == true
-                              ? 'Type of Program'
-                              : 'No Program',
-                          value: _enrollment?.isEnrolled == true
-                              ? _enrollment!.program
-                              : 'N/A',
+                          title: _enrollments.isEmpty
+                              ? 'No Program'
+                              : _enrollments.length == 1
+                                  ? 'Program Type'
+                                  : 'Programs',
+                          value: _enrollments.isEmpty
+                              ? 'N/A'
+                              : _enrollments.length == 1
+                                  ? _enrollments[0].program
+                                  : '${_enrollments.length} Active',
                           color: Colors.blue,
                         ),
                       ),
@@ -477,7 +510,7 @@ class _HomeTabState extends State<_HomeTab> {
                         child: _buildStatCard(
                           icon: Icons.calendar_today,
                           title: 'Days Left',
-                          value: _enrollment?.daysLeft.toString() ?? '0',
+                          value: _getMinDaysLeft(),
                           color: Colors.orange,
                         ),
                       ),
@@ -491,7 +524,7 @@ class _HomeTabState extends State<_HomeTab> {
                         child: _buildStatCard(
                           icon: Icons.access_time,
                           title: 'Sessions Left',
-                          value: _enrollment?.remainingSessionsDisplay ?? 'N/A',
+                          value: _getTotalSessionsLeft(),
                           color: Colors.green,
                         ),
                       ),
@@ -499,10 +532,8 @@ class _HomeTabState extends State<_HomeTab> {
                       Expanded(
                         child: _buildStatCard(
                           icon: Icons.payments,
-                          title: 'Balance',
-                          value: _enrollment != null
-                              ? '₱${_enrollment!.remainingBalance.toStringAsFixed(2)}'
-                              : '₱0.00',
+                          title: 'Total Balance',
+                          value: _getTotalBalance(),
                           color: Colors.red,
                         ),
                       ),
@@ -511,10 +542,10 @@ class _HomeTabState extends State<_HomeTab> {
 
                   const SizedBox(height: 24),
 
-                  // Current Enrollment Info
-                  if (_enrollment?.isEnrolled == true) ...[
+                  // Current Programs - Show all enrollments
+                  if (_enrollments.isNotEmpty) ...[
                     const Text(
-                      'Current Program',
+                      'Current Programs',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -522,108 +553,13 @@ class _HomeTabState extends State<_HomeTab> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            AppConstants.primaryColor,
-                            Color(0xFF3B82F6)
+                    // Display each enrollment
+                    ..._enrollments.map((enrollment) => Column(
+                          children: [
+                            _buildEnrollmentCard(enrollment),
+                            const SizedBox(height: 16),
                           ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _enrollment!.program,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              if (_enrollment!.isExpired)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.shade700,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'EXPIRED',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on,
-                                  color: Colors.white70, size: 16),
-                              const SizedBox(width: 4),
-                              Text(
-                                _enrollment!.branch,
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 14),
-                              ),
-                              const SizedBox(width: 16),
-                              const Icon(Icons.person,
-                                  color: Colors.white70, size: 16),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  _enrollment!.trainor,
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Divider(color: Colors.white30, height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildEnrollmentStat('Sessions Used',
-                                  _enrollment!.sessionsDisplay),
-                              Container(
-                                  width: 1, height: 30, color: Colors.white30),
-                              _buildEnrollmentStat('Total Paid',
-                                  '₱${_enrollment!.completeTotalPaid.toStringAsFixed(2)}'),
-                              Container(
-                                  width: 1, height: 30, color: Colors.white30),
-                              _buildEnrollmentStat(
-                                  'Ends',
-                                  _enrollment!.endDate.isNotEmpty
-                                      ? _enrollment!.endDate
-                                      : 'N/A'),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                        )),
                   ],
 
                   // Quick Actions
@@ -832,6 +768,170 @@ class _HomeTabState extends State<_HomeTab> {
           ),
         ),
       ],
+    );
+  }
+
+  // Helper methods for aggregating stats from multiple enrollments
+  String _getMinDaysLeft() {
+    if (_enrollments.isEmpty) return '0';
+    final days = _enrollments.map((e) => e.daysLeft).toList();
+    days.sort();
+    return days.first.toString(); // Return the nearest expiration
+  }
+
+  String _getTotalSessionsLeft() {
+    if (_enrollments.isEmpty) return 'N/A';
+    int total = 0;
+    bool hasSessionTracking = false;
+
+    for (var enrollment in _enrollments) {
+      if (enrollment.hasSessionTracking) {
+        hasSessionTracking = true;
+        total += enrollment.remainingSessions;
+      }
+    }
+
+    return hasSessionTracking ? total.toString() : 'N/A';
+  }
+
+  String _getTotalBalance() {
+    if (_enrollments.isEmpty) return '₱0.00';
+    double total = 0;
+
+    for (var enrollment in _enrollments) {
+      total += enrollment.remainingBalance;
+    }
+
+    return '₱${total.toStringAsFixed(2)}';
+  }
+
+  // Build individual enrollment card
+  Widget _buildEnrollmentCard(EnrollmentInfoModel enrollment) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: enrollment.isPersonalTraining
+              ? [
+                  const Color(0xFF9333EA),
+                  const Color(0xFFC026D3)
+                ] // Purple for PT
+              : [
+                  AppConstants.primaryColor,
+                  const Color(0xFF3B82F6)
+                ], // Blue for Regular
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  enrollment.program,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (enrollment.isPersonalTraining)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.person, color: Colors.white, size: 14),
+                      SizedBox(width: 4),
+                      Text(
+                        'PT',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (enrollment.isExpired)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade700,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: const Text(
+                    'EXPIRED',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.location_on, color: Colors.white70, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                enrollment.branch,
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(width: 16),
+              const Icon(Icons.person, color: Colors.white70, size: 16),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  enrollment.trainor,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const Divider(color: Colors.white30, height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildEnrollmentStat('Sessions Used', enrollment.sessionsDisplay),
+              Container(width: 1, height: 30, color: Colors.white30),
+              _buildEnrollmentStat('Total Paid',
+                  '₱${enrollment.completeTotalPaid.toStringAsFixed(2)}'),
+              Container(width: 1, height: 30, color: Colors.white30),
+              _buildEnrollmentStat('Ends',
+                  enrollment.endDate.isNotEmpty ? enrollment.endDate : 'N/A'),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

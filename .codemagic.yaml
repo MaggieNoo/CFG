@@ -1,3 +1,0 @@
-# Alternative filename - Codemagic looks for both codemagic.yaml and .codemagic.yaml
-# This is a symlink/duplicate for compatibility
-# Use the main codemagic.yaml file for configuration

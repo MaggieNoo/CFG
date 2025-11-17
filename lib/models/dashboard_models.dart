@@ -9,6 +9,7 @@ class EnrollmentInfoModel {
   final String branch;
   final String trainor;
   final String program;
+  final String programCode; // Added for PT detection
   final int sessionsConsumed;
   final double totalPaid;
 
@@ -23,6 +24,7 @@ class EnrollmentInfoModel {
     required this.branch,
     required this.trainor,
     required this.program,
+    required this.programCode,
     required this.sessionsConsumed,
     required this.totalPaid,
   });
@@ -47,12 +49,23 @@ class EnrollmentInfoModel {
       branch: json['branch']?.toString() ?? 'N/A',
       trainor: json['trainor']?.toString() ?? 'No Trainor',
       program: json['program']?.toString() ?? 'N/A',
+      programCode:
+          json['prog_code']?.toString() ?? '', // Added for PT detection
       sessionsConsumed: sessions,
       totalPaid: paid,
     );
   }
 
   bool get isEnrolled => id.isNotEmpty;
+
+  // Check if this is a Personal Training program
+  bool get isPersonalTraining {
+    final nameMatch = program.toLowerCase().contains('personal training') ||
+        program.toLowerCase().contains('pt');
+    final codeMatch = programCode.toLowerCase().contains('pt') ||
+        programCode.toLowerCase().contains('personal');
+    return nameMatch || codeMatch;
+  }
 
   // Check if this enrollment uses sessions (Consumable programs)
   bool get hasSessionTracking {

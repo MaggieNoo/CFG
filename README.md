@@ -11,6 +11,11 @@ A Flutter mobile application for Camalig Fitness Gym with Android and iOS suppor
 - ✅ Forgot Password with OTP
 - ✅ Form Validation
 - ✅ Responsive UI Design
+- ✅ Independent Enrollment (trainer optional)
+- ✅ QR Code Time In/Out
+- ✅ Dashboard with Membership Status
+- ✅ Payment History
+- ✅ Attendance Tracking
 
 ## Project Structure
 

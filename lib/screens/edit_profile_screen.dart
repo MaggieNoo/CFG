@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/profile_api_service.dart';
 import '../utils/constants.dart';
@@ -32,6 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _profileImageBase64;
   File? _profileImageFile;
   bool _isLoading = false;
+  bool _imageChanged = false; // Track if user picked a new image
   String _selectedGender = '1'; // 1=Male, 2=Female
 
   @override
@@ -89,9 +91,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 85,
+        maxWidth: 600, // Reduced from 800
+        maxHeight: 600, // Reduced from 800
+        imageQuality: 70, // Reduced from 85 to further compress
       );
 
       if (image != null) {
@@ -99,9 +101,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         final bytes = await imageFile.readAsBytes();
         final base64Image = base64Encode(bytes);
 
+        // Check file size (base64 length is approximately file size * 1.33)
+        final estimatedSizeKB = (base64Image.length * 0.75) / 1024;
+        print('Profile image size: ${estimatedSizeKB.toStringAsFixed(2)} KB');
+
+        if (estimatedSizeKB > 2048) {
+          // Warn if over 2MB
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content:
+                    Text('Image is too large. Please choose a smaller image.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+
         setState(() {
           _profileImageFile = imageFile;
           _profileImageBase64 = base64Image;
+          _imageChanged = true; // Mark that image was changed
         });
       }
     } catch (e) {
@@ -171,14 +192,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         phone2: _phone2Controller.text.trim(),
         username: _usernameController.text.trim(),
         password: _passwordController.text.trim(),
-        profileBase64: _profileImageBase64 ?? '',
+        profileBase64: _imageChanged
+            ? (_profileImageBase64 ?? '')
+            : '', // Only send if changed
       );
 
       if (mounted) {
         setState(() => _isLoading = false);
 
         if (result['success']) {
-          // Show success dialog asking user to logout
+          // Debug logging
+          print('=== Profile Update Result ===');
+          print('Success: ${result['success']}');
+          print('Message: ${result['message']}');
+          print('Has userData: ${result['userData'] != null}');
+          if (result['userData'] != null) {
+            print('UserData keys: ${result['userData'].keys}');
+            print(
+                'UserData profile field: ${result['userData']['profile']?.substring(0, 50) ?? 'null'}...');
+          }
+
+          // Update local user data if provided
+          if (result['userData'] != null) {
+            try {
+              final prefs = await SharedPreferences.getInstance();
+              final updatedUser = UserModel.fromJson(result['userData']);
+              print(
+                  'UpdatedUser profileImage length: ${updatedUser.profileImage?.length ?? 0}');
+              await prefs.setString(
+                  AppConstants.keyUserData, json.encode(updatedUser.toJson()));
+              print('✓ Updated user data saved to SharedPreferences');
+            } catch (e) {
+              print('✗ Error saving updated user data: $e');
+            }
+          } else {
+            print('⚠ No userData in result - profile image will not update');
+          }
+
+          // Show success dialog
           await showDialog(
             context: context,
             barrierDismissible: false,
@@ -190,14 +241,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   Text('Success'),
                 ],
               ),
-              content: const Text(
-                'Your profile has been updated successfully!\n\nPlease logout and login again to see the changes.',
+              content: Text(
+                result['userData'] != null
+                    ? 'Your profile has been updated successfully!'
+                    : 'Your profile has been updated successfully!\n\nPlease logout and login again to see the profile picture changes.',
               ),
               actions: [
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context); // Close dialog
-                    Navigator.pop(context, true); // Go back to profile
+                    Navigator.pop(
+                        context, true); // Go back to profile with refresh flag
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppConstants.primaryColor,

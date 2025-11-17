@@ -30,8 +30,10 @@ class EnrollmentApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
 
-        // Check if response contains the expected fields
-        if (data.containsKey('pid')) {
+        // Check if response contains the expected fields (pids for new format, pid for old format)
+        if (data.containsKey('pids') ||
+            data.containsKey('pid') ||
+            data.containsKey('programs')) {
           final enrollmentData = EnrollmentResponse.fromJson(data);
           return {
             'success': true,

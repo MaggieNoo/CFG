@@ -16,7 +16,8 @@ class TimeInOutModel {
   final bool displayPayment;
   final bool requestsPayment;
   final bool closeAfter;
-  final String action; // "1" = time-out, "2" = pay, "3" = pay+time-out
+  final String
+      action; // "1" = time-out, "2" = pay, "3" = pay+time-out, "6" = select enrollment
   final String buttonOne;
   final String buttonTwo;
 
@@ -74,20 +75,99 @@ class TimeInOutModel {
   bool get showPayButton => displayPayment;
 }
 
+// Model for enrollment option when user has multiple enrollments
+class EnrollmentOption {
+  final String id;
+  final String program;
+  final String trainor;
+  final String isDaily;
+  final String amount;
+  final String paid;
+  final String? daysLeft;
+  final String? sessionsUsed;
+  final String? totalSessions;
+
+  EnrollmentOption({
+    required this.id,
+    required this.program,
+    required this.trainor,
+    required this.isDaily,
+    required this.amount,
+    required this.paid,
+    this.daysLeft,
+    this.sessionsUsed,
+    this.totalSessions,
+  });
+
+  factory EnrollmentOption.fromJson(Map<String, dynamic> json) {
+    return EnrollmentOption(
+      id: json['id']?.toString() ?? '',
+      program: json['program']?.toString() ?? '',
+      trainor: json['trainor']?.toString() ?? '',
+      isDaily: json['is_daily']?.toString() ?? '0',
+      amount: json['amount']?.toString() ?? '0.00',
+      paid: json['paid']?.toString() ?? '0.00',
+      daysLeft: json['days_left']?.toString(),
+      sessionsUsed: json['sessions_used']?.toString(),
+      totalSessions: json['total_sessions']?.toString(),
+    );
+  }
+
+  String get typeLabel => isDaily == '1' ? 'Daily' : 'Monthly/Consumable';
+
+  String get sessionInfo {
+    if (totalSessions == null || totalSessions == '0') {
+      return 'N/A sessions';
+    }
+    final used = sessionsUsed ?? '0';
+    return '$used/$totalSessions sessions';
+  }
+
+  String get daysLeftInfo {
+    if (daysLeft == null || daysLeft == '0') {
+      return 'Expired';
+    }
+    return '$daysLeft days left';
+  }
+}
+
 class TimeInOutResponse {
   final String result;
   final String message;
   final TimeInOutModel? attendance;
+  final List<EnrollmentOption>? enrollmentOptions; // For multiple enrollments
 
   TimeInOutResponse({
     required this.result,
     required this.message,
     this.attendance,
+    this.enrollmentOptions,
   });
 
   factory TimeInOutResponse.fromJson(Map<String, dynamic> json) {
     // Extract message from data field
     String rawMessage = json['data']?.toString() ?? '';
+
+    // Check if this is a multiple enrollment selection response (d=6)
+    if (json['d']?.toString() == '6' && json['enrollments'] != null) {
+      List<EnrollmentOption> options = [];
+      try {
+        List<dynamic> enrollmentsList = json['enrollments'] as List<dynamic>;
+        for (var enrollment in enrollmentsList) {
+          options.add(
+              EnrollmentOption.fromJson(enrollment as Map<String, dynamic>));
+        }
+      } catch (e) {
+        print('❌ Error parsing enrollment options: $e');
+      }
+
+      return TimeInOutResponse(
+        result: json['result']?.toString() ?? '0',
+        message: rawMessage,
+        attendance: null,
+        enrollmentOptions: options,
+      );
+    }
 
     // If we have attendance data, create the model
     // Only create if idout has a valid value (not empty string)
@@ -110,10 +190,13 @@ class TimeInOutResponse {
       result: json['result']?.toString() ?? '0',
       message: rawMessage,
       attendance: attendanceModel,
+      enrollmentOptions: null,
     );
   }
 
   bool get isSuccess => result == '1';
+  bool get hasMultipleEnrollments =>
+      enrollmentOptions != null && enrollmentOptions!.isNotEmpty;
 }
 
 class TimeActionResponse {

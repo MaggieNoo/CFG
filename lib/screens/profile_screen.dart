@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../utils/constants.dart';
@@ -8,15 +9,51 @@ import 'payment_screen.dart';
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
-  final UserModel user;
+class ProfileScreen extends StatefulWidget {
+  final UserModel initialUser;
   final Function(int)? onNavigateToTab; // Add callback
 
   const ProfileScreen({
     super.key,
-    required this.user,
+    required this.initialUser,
     this.onNavigateToTab, // Optional callback
   });
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late UserModel user;
+
+  @override
+  void initState() {
+    super.initState();
+    user = widget.initialUser;
+  }
+
+  Future<void> _reloadUserData() async {
+    try {
+      print('=== Reloading User Data ===');
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString(AppConstants.keyUserData);
+      if (userDataString != null) {
+        print('Found user data in SharedPreferences');
+        final userJson = json.decode(userDataString);
+        final reloadedUser = UserModel.fromJson(userJson);
+        print(
+            'Reloaded user profileImage length: ${reloadedUser.profileImage?.length ?? 0}');
+        setState(() {
+          user = reloadedUser;
+        });
+        print('✓ User data reloaded and UI updated');
+      } else {
+        print('⚠ No user data found in SharedPreferences');
+      }
+    } catch (e) {
+      print('✗ Error reloading user data: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -181,13 +218,13 @@ class ProfileScreen extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (_) => PaymentScreen(
                             user: user,
-                            onNavigateToTab: onNavigateToTab,
+                            onNavigateToTab: widget.onNavigateToTab,
                           ),
                         ),
                       );
                       // If a tab index was returned, navigate to that tab
-                      if (result != null && onNavigateToTab != null) {
-                        onNavigateToTab!(result);
+                      if (result != null && widget.onNavigateToTab != null) {
+                        widget.onNavigateToTab!(result);
                       }
                     },
                   ),
@@ -199,13 +236,18 @@ class ProfileScreen extends StatelessWidget {
                     title: 'Edit Profile',
                     subtitle: 'Update your information',
                     color: AppConstants.primaryColor,
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => EditProfileScreen(user: user),
                         ),
                       );
+
+                      // Reload user data if profile was updated
+                      if (result == true) {
+                        await _reloadUserData();
+                      }
                     },
                   ),
                   const SizedBox(height: 12),

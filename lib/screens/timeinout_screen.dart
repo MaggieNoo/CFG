@@ -56,7 +56,12 @@ class _TimeInOutScreenState extends State<TimeInOutScreen> {
       });
 
       if (response.isSuccess) {
-        _showAttendanceDialog(response);
+        // Check if user has multiple enrollments
+        if (response.hasMultipleEnrollments) {
+          _showEnrollmentSelectionDialog(response);
+        } else {
+          _showAttendanceDialog(response);
+        }
       } else {
         _showErrorDialog(response.message);
       }
@@ -67,6 +72,214 @@ class _TimeInOutScreenState extends State<TimeInOutScreen> {
         _hasScanned = false;
       });
       _showErrorDialog('Error scanning QR code: $e');
+    }
+  }
+
+  void _showEnrollmentSelectionDialog(TimeInOutResponse response) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        backgroundColor: Colors.grey[50],
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.85,
+          constraints: const BoxConstraints(maxWidth: 400),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with icon and title
+              Row(
+                children: [
+                  Icon(
+                    Icons.fitness_center,
+                    color: AppConstants.primaryColor,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Select Program',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Instruction text
+              const Text(
+                'You have multiple active programs.\nWhich program are you using today?',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Program options
+              ...response.enrollmentOptions!.asMap().entries.map((entry) {
+                final index = entry.key;
+                final enrollment = entry.value;
+                final isLast = index == response.enrollmentOptions!.length - 1;
+
+                // Determine if this is Personal Training
+                final isPT = enrollment.program
+                        .toLowerCase()
+                        .contains('personal training') ||
+                    enrollment.program.toLowerCase().contains('pt');
+
+                // Set gradient colors based on program
+                final gradientColors = isPT
+                    ? [const Color(0xFFB366FF), const Color(0xFFD966FF)]
+                    : [const Color(0xFF4D88FF), const Color(0xFF66A3FF)];
+
+                return Column(
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                          _handleEnrollmentSelection(enrollment);
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: gradientColors,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          padding: const EdgeInsets.all(18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      enrollment.program,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  if (isPT)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.3),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: const [
+                                          Icon(
+                                            Icons.person,
+                                            size: 14,
+                                            color: Colors.white,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'PT',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${enrollment.daysLeftInfo} • ${enrollment.sessionInfo}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (!isLast) const SizedBox(height: 12),
+                  ],
+                );
+              }).toList(),
+
+              const SizedBox(height: 24),
+
+              // Cancel button
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _resetScanner();
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppConstants.primaryColor,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleEnrollmentSelection(EnrollmentOption enrollment) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final response = await TimeInOutApiService.timeInToEnrollment(
+        enrollmentId: enrollment.id,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+
+      if (response.isSuccess) {
+        _showAttendanceDialog(response);
+      } else {
+        _showErrorDialog(response.message);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+      _showErrorDialog('Error processing enrollment: $e');
     }
   }
 

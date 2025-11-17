@@ -13,10 +13,6 @@ void main() {
   EnvironmentConfig.setEnvironment(Environment.production);
   EnvironmentConfig.printConfig(); // Shows which environment is active
 
-  // Force print for verification
-  print('APP STARTED - Environment: ${EnvironmentConfig.environmentName}');
-  print('Base URL: ${EnvironmentConfig.baseUrl}');
-
   // Set preferred orientations
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

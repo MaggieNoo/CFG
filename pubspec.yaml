@@ -36,8 +36,3 @@ flutter:
   
   assets:
     - assets/images/
-    - assets/images/logo.png
-    - assets/images/login.jpg
-    - assets/images/forgot-password.jpg
-    - assets/images/signup-1.jpg
-    - assets/images/signup-2.jpg

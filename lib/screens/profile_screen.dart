@@ -506,11 +506,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
 
       try {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('token') ?? '';
-
-        // Call API to delete account
-        final result = await ApiService.deleteAccount(user.id, token);
+        // Call API to delete account using user's token
+        final result = await ApiService.deleteAccount(user.id, user.token);
 
         if (context.mounted) {
           Navigator.pop(context); // Close loading dialog

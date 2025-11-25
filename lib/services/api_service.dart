@@ -183,4 +183,46 @@ class ApiService {
       };
     }
   }
+
+  // Delete Account API
+  static Future<Map<String, dynamic>> deleteAccount(
+      String userId, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}app.account.php'),
+        body: {
+          'ftr': '120-0',
+          'token': AppConstants.apiToken,
+          'key': token,
+          'user_id': userId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+
+        if (data['count'] == '1') {
+          return {
+            'success': true,
+            'message': data['result'] ?? 'Account deleted successfully',
+          };
+        } else {
+          return {
+            'success': false,
+            'message': data['result'] ?? 'Account deletion failed',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': 'Server error. Please try again later.',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An error occurred: ${e.toString()}',
+      };
+    }
+  }
 }

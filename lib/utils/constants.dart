@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
-import 'environment_config.dart';
-
 class AppConstants {
   // API Configuration
-  // Dynamic baseUrl based on environment
-  // Change environment in environment_config.dart
-  static String get baseUrl => EnvironmentConfig.baseUrl;
+  // Hardcoded to LIVE PRODUCTION SERVER
+  static const String baseUrl = 'https://v2.camaligfitnessgym.com/mobile/';
   static const String apiToken = '_jE@20RIC!25\$\$';
 
-  // For cloud testing platforms (Appetize.io, BrowserStack, etc.)
-  // Set Environment.demo in environment_config.dart to use mock data
-  static bool get isDemoMode => EnvironmentConfig.isDemoMode;
+  static const bool isDemoMode = false;
 
   // API Endpoints
   static const String loginEndpoint = 'app.login.php';

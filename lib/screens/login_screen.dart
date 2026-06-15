@@ -5,6 +5,7 @@ import '../utils/constants.dart';
 import '../utils/validators.dart';
 import 'register_screen.dart';
 import 'dashboard_screen.dart';
+import 'otp_verification_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,14 +25,15 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _loadSavedUsername();
+    _loadSavedCredentials();
   }
 
-  Future<void> _loadSavedUsername() async {
-    final savedUsername = await AuthService.getSavedUsername();
-    if (savedUsername != null) {
+  Future<void> _loadSavedCredentials() async {
+    final savedCredentials = await AuthService.getCredentials();
+    if (savedCredentials != null) {
       setState(() {
-        _usernameController.text = savedUsername;
+        _usernameController.text = savedCredentials['username'] ?? '';
+        _passwordController.text = savedCredentials['password'] ?? '';
         _rememberMe = true;
       });
     }
@@ -53,7 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
         await AuthService.saveUserData(result['user'], _rememberMe);
 
         if (_rememberMe) {
-          await AuthService.saveUsername(_usernameController.text.trim());
+          await AuthService.saveCredentials(
+            _usernameController.text.trim(),
+            _passwordController.text,
+          );
         }
 
         if (mounted) {
@@ -363,12 +368,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showForgotPasswordDialog() {
     final emailController = TextEditingController();
+    bool isSendingOtp = false;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Forgot Password'),
-        content: Column(
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Forgot Password'),
+          content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('Enter your email address to receive OTP code'),
@@ -388,35 +396,65 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: isSendingOtp ? null : () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () async {
-              if (emailController.text.isNotEmpty) {
-                Navigator.pop(context);
+            onPressed: isSendingOtp
+                ? null
+                : () async {
+                    if (emailController.text.isNotEmpty) {
+                      setDialogState(() => isSendingOtp = true);
 
-                final result = await ApiService.forgotPassword(
-                  emailController.text.trim(),
-                );
+                      final result = await ApiService.forgotPassword(
+                        emailController.text.trim(),
+                      );
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(result['message']),
-                      backgroundColor:
-                          result['success'] ? Colors.green : Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
+                      if (mounted) {
+                        setDialogState(() => isSendingOtp = false);
+                        Navigator.pop(dialogContext); // Close dialog AFTER api finishes
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(result['message']),
+                            backgroundColor:
+                                result['success'] ? Colors.green : Colors.red,
+                          ),
+                        );
+
+                        if (result['success']) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => OTPVerificationScreen(
+                                email: result['email'] ?? emailController.text.trim(),
+                                sid: result['sid'] ?? '',
+                                itoken: result['itoken'] ?? '',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppConstants.primaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
             ),
-            child: const Text('Send OTP'),
+            child: isSendingOtp
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text('Send OTP'),
           ),
         ],
+      ),
       ),
     );
   }

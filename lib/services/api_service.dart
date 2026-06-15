@@ -163,6 +163,7 @@ class ApiService {
             'message': data['result'] ?? 'OTP sent to your email',
             'sid': data['sid'],
             'email': data['email'],
+            'itoken': data['itoken'],
           };
         } else {
           return {
@@ -210,6 +211,95 @@ class ApiService {
           return {
             'success': false,
             'message': data['result'] ?? 'Account deletion failed',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': 'Server error. Please try again later.',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An error occurred: ${e.toString()}',
+      };
+    }
+  }
+
+  // Verify OTP API
+  static Future<Map<String, dynamic>> verifyOtp(
+      String sid, String email, String itoken, String otp) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}${AppConstants.loginEndpoint}'),
+        body: {
+          'ftr': '110-1',
+          'token': AppConstants.apiToken,
+          'key': '',
+          'sid': sid,
+          'itoken': itoken,
+          'otp': otp,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+
+        if (data['count'] == '1') {
+          return {
+            'success': true,
+            'message': data['result'] ?? 'OTP Verified successfully',
+            'data': data['data'],
+          };
+        } else {
+          return {
+            'success': false,
+            'message': data['result'] ?? 'Invalid OTP',
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': 'Server error. Please try again later.',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An error occurred: ${e.toString()}',
+      };
+    }
+  }
+
+  // Reset Password API
+  static Future<Map<String, dynamic>> resetPassword(
+      String itoken, String otp, String newPassword) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}${AppConstants.loginEndpoint}'),
+        body: {
+          'ftr': '110-2',
+          'token': AppConstants.apiToken,
+          'key': '',
+          'itoken': itoken,
+          'otp': otp,
+          'pw': newPassword,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+
+        if (data['count'] == '1') {
+          return {
+            'success': true,
+            'message': data['result'] ?? 'Password reset successfully',
+          };
+        } else {
+          return {
+            'success': false,
+            'message': data['result'] ?? 'Password reset failed',
           };
         }
       } else {

@@ -383,7 +383,12 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   }
 
   double _getTotalPaid() {
-    return _payments.fold(0.0, (sum, payment) => sum + payment.paidAmount);
+    return _payments.fold(0.0, (sum, payment) {
+      if (payment.apaid == '1') {
+        return sum + payment.paidAmount;
+      }
+      return sum;
+    });
   }
 
   @override
@@ -571,6 +576,9 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   }
 
   Widget _buildPaymentCard(PaymentHistoryModel payment) {
+    final bool isApproved = payment.apaid == '1';
+    final Color statusColor = isApproved ? Colors.green : Colors.orange;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 1,
@@ -584,12 +592,12 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: statusColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
-                Icons.payment,
-                color: Colors.green,
+              child: Icon(
+                isApproved ? Icons.payment : Icons.pending_actions,
+                color: statusColor,
                 size: 24,
               ),
             ),
@@ -623,13 +631,27 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
                 ],
               ),
             ),
-            Text(
-              '${payment.paidAmount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${payment.paidAmount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
+                  ),
+                ),
+                if (!isApproved)
+                  const Text(
+                    'Pending',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

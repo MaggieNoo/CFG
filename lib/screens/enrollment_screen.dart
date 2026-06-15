@@ -473,10 +473,10 @@ class _EnrollmentFormScreenState extends State<_EnrollmentFormScreen> {
         if (widget.program.isConsumable) {
           // For Consumable programs, use duration field (in days)
           final duration = int.tryParse(widget.program.duration) ?? 30;
-          endDate = picked.add(Duration(days: duration));
+          endDate = picked.add(Duration(days: duration - 1));
         } else {
           // For Monthly programs, add 1 month
-          endDate = DateTime(picked.year, picked.month + 1, picked.day);
+          endDate = DateTime(picked.year, picked.month + 1, picked.day - 1);
         }
       }
     });
